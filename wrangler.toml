@@ -1,0 +1,36 @@
+# =============================================================================
+# ⚠️  AVERTISSEMENT — MediaFusion est un serveur Rust (Axum) longue durée.
+# =============================================================================
+# Ce fichier wrangler.toml est un EXEMPLE pour un éventuel chemin critique
+# réécrit en TypeScript (manifest + streams) sur Cloudflare Workers.
+# Il NE fonctionnera PAS tel quel avec le binaire Rust actuel (mediafusion-api),
+# qui nécessite : un socket TCP longue durée, PostgreSQL + Redis, des tâches
+# de fond (cron/scraping), et l'écriture sur disque.
+#
+# Pour l'utiliser, il faudrait réécrire les endpoints Stremio critiques
+# (/manifest, /catalog, /stream, /meta) en TypeScript dans workers/ et les
+# connecter à du KV/Redis externe (Upstash) + une DB Postgres externe
+# (Supabase / Neon / Railway Postgres gratuit).
+#
+# Travail estimé : réécriture du chemin critique + maintien du worker de
+# scraping Rust séparé (sur Render/Fly/VPS), partage via Postgres + Redis.
+
+name = "mediafusion-addon"
+main = "src/worker.ts"
+compatibility_date = "2026-10-30"
+
+[vars]
+# Secrets à définir via `wrangler secret put` (jamais commités) :
+#   MEDIAFUSION_SECRET_KEY, DATABASE_URL (Postgres externe), UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+
+[[kv_namespaces]]
+binding = "STREAM_CACHE"
+id = "<remplacer_avec_l_id_du_kv_upstash_ou_cloudflare>"
+
+[[observability.enabled]]
+logs = true
+
+[node_compat]
+# Valeur par défaut false : pas d'API Node (fs, crypto, etc.) autorisée.
+# Ajouter uniquement si une dépendance l'exige absolument (augmente le bundle).
+node_compat = false
