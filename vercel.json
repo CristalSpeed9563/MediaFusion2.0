@@ -1,0 +1,47 @@
+{
+  // ⚠️  AVERTISSEMENT — Idem wrangler.toml : ce vercel.json est un exemple pour
+  // un chemin critique réécrit en Node/TypeScript (Vercel Serverless Functions).
+  // Le binaire Rust Axum actuel ne peut pas s'exécuter dans une fonction
+  // serverless (pas de socket longue durée, pas de PostgreSQL/Redis embarqués,
+  // pas de tâches de fond).
+  //
+  // Exemple de structure cible (à adapter après réécriture TS) :
+  //
+  // {
+  //   "version": 2,
+  //   "builds": [{ "src": "api/*.ts", "use": "@vercel/node" }],
+  //   "routes": [{ "src": "/manifest", "dest": "/api/manifest.ts" }],
+  //   "env": { "DATABASE_URL": "@mediatfusion_database_url", ... }
+  // }
+
+  "version": 2,
+  "builds": [
+    { "src": "api/manifest.ts", "use": "@vercel/node" },
+    { "src": "api/streams.ts", "use": "@vercel/node" },
+    { "src": "api/catalog.ts", "use": "@vercel/node" },
+    { "src": "api/meta.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/manifest", "dest": "/api/manifest.ts" },
+    { "src": "/catalog/(.*)", "dest": "/api/catalog.ts" },
+    { "src": "/stream/(.*)", "dest": "/api/streams.ts" },
+    { "src": "/meta/(.*)", "dest": "/api/meta.ts" }
+  ],
+  "headers": [
+    {
+      "source": "/stream/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=300, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/manifest",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=86400, stale-while-revalidate=604800" }
+      ]
+    }
+  ],
+  "functions": {
+    "api/*.ts": { "maxDuration": 10 }
+  }
+}
