@@ -1,0 +1,32 @@
+# ⚠️  AVERTISSEMENT — render.yaml est pour le serveur Rust EXISTANT (longue durée).
+# C'est l'option la plus proche de "gratuit" pour ce code, mais Render Free
+# éteint le service après 15 min d'inactivité → cold start ~50s, incompatible
+# avec les attentes de temps de réponse de Stremio. Nécessite aussi une DB
+# PostgreSQL et Redis externes (Render Postgres gratuit, ou Upstash Redis).
+#
+# Mieux pour la prod : Render Starter ou un VPS dédié (Hetzner/OVH).
+
+services:
+  - type: web
+    name: mediafusion-api
+    env: docker
+    repo: https://github.com/mhdzumair/MediaFusion.git
+    dockerfilePath: deployment/Dockerfile
+    dockerContext: /
+    plan: starter  # "free" disponible mais spindown après 15 min d'inactivité
+    region: oregon
+    envVars:
+      - key: HOST_URL
+        value: https://mediafusion-api.onrender.com
+      - key: SECRET_KEY
+        generateValue: true
+      - key: API_PASSWORD
+        generateValue: true
+      - key: POSTGRES_URI
+        sync: true
+      - key: REDIS_URL
+        sync: true
+    disk:
+      name: data
+      mountPath: /mediafusion/data
+      sizeGB: 1
